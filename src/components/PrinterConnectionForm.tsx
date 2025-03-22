@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Port {
   path: string;
@@ -15,11 +16,13 @@ interface Port {
   locationId?: string;
   productId?: string;
   vendorId?: string;
+  type?: string;
 }
 
 interface PrinterConfig {
   type: string;
   interface: string;
+  connectionType: 'serial' | 'usb';
 }
 
 interface PrinterConnectionFormProps {
@@ -33,6 +36,7 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
   const [testingPrinter, setTestingPrinter] = useState(false);
   const [printerType, setPrinterType] = useState('EPSON');
   const [portPath, setPortPath] = useState('');
+  const [connectionType, setConnectionType] = useState<'serial' | 'usb'>('serial');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,7 +48,9 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
             setPorts([
               { path: 'COM1', manufacturer: 'Sample Manufacturer' },
               { path: 'COM2', manufacturer: 'Sample Manufacturer' },
-              { path: '/dev/usb/lp0', manufacturer: 'Sample Manufacturer' }
+              { path: '/dev/usb/lp0', manufacturer: 'Sample Manufacturer' },
+              { path: 'usb:0x04b8:0x0202', manufacturer: 'Epson USB Device', type: 'usb' },
+              { path: 'usb:0x04b8:0x0e03', manufacturer: 'Star USB Device', type: 'usb' }
             ]);
             setLoading(false);
           }, 1000);
@@ -95,7 +101,8 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
 
       const config = {
         type: printerType,
-        interface: portPath
+        interface: portPath,
+        connectionType: connectionType
       };
 
       const result = await window.electronAPI.testPrinter(config);
@@ -125,6 +132,13 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
     }
   };
 
+  // Filter ports based on the selected connection type
+  const filteredPorts = ports.filter(port => 
+    connectionType === 'usb' 
+      ? port.type === 'usb' || port.path.startsWith('usb:') 
+      : !port.path.startsWith('usb:') && port.type !== 'usb'
+  );
+
   return (
     <Card className="w-full max-w-md animate-appear glass">
       <CardHeader>
@@ -134,6 +148,13 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Tabs defaultValue="serial" value={connectionType} onValueChange={(value) => setConnectionType(value as 'serial' | 'usb')}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="serial">Serial Port</TabsTrigger>
+            <TabsTrigger value="usb">USB Device</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         <div className="space-y-2">
           <Label htmlFor="printer-type">Printer Type</Label>
           <Select value={printerType} onValueChange={setPrinterType}>
@@ -150,20 +171,26 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="port">Port</Label>
+          <Label htmlFor="port">{connectionType === 'usb' ? 'USB Device' : 'Port'}</Label>
           {loading ? (
             <div className="h-10 w-full bg-secondary animate-pulse rounded-md"></div>
           ) : (
             <Select value={portPath} onValueChange={setPortPath}>
               <SelectTrigger id="port" className="w-full">
-                <SelectValue placeholder="Select port" />
+                <SelectValue placeholder={`Select ${connectionType === 'usb' ? 'USB device' : 'port'}`} />
               </SelectTrigger>
               <SelectContent>
-                {ports.map((port) => (
-                  <SelectItem key={port.path} value={port.path}>
-                    {port.path} {port.manufacturer ? `(${port.manufacturer})` : ''}
+                {filteredPorts.length > 0 ? (
+                  filteredPorts.map((port) => (
+                    <SelectItem key={port.path} value={port.path}>
+                      {port.path} {port.manufacturer ? `(${port.manufacturer})` : ''}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem disabled value="none">
+                    No {connectionType === 'usb' ? 'USB devices' : 'ports'} found
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           )}
@@ -171,7 +198,9 @@ const PrinterConnectionForm: React.FC<PrinterConnectionFormProps> = ({ onConnect
 
         <div className="mt-2">
           <p className="text-sm text-muted-foreground">
-            If your printer is not showing up, ensure it's properly connected and powered on.
+            {connectionType === 'usb' 
+              ? 'If your USB printer is not showing up, ensure it\'s properly connected and powered on.' 
+              : 'If your printer is not showing up, ensure it\'s properly connected and powered on.'}
           </p>
         </div>
       </CardContent>

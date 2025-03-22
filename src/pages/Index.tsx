@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 interface PrinterConfig {
   type: string;
   interface: string;
+  connectionType: 'serial' | 'usb';
 }
 
 interface ReceiptItem {
