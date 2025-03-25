@@ -8,6 +8,7 @@ const usb = require('usb');
 const escpos = require('escpos');
 escpos.USB = require('escpos-usb');
 
+// Keep a global reference of the window object
 let mainWindow;
 
 function createWindow() {
@@ -26,7 +27,9 @@ function createWindow() {
     icon: path.join(__dirname, '../../public/app-icon.png')
   });
 
-  if (process.env.NODE_ENV === 'development') {
+  // Load the index.html from the app
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
     mainWindow.loadURL('http://localhost:8080');
     mainWindow.webContents.openDevTools();
   } else {
@@ -56,6 +59,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// IPC Handlers
 ipcMain.handle('get-ports', async () => {
   try {
     const ports = await SerialPort.SerialPort.list();
@@ -170,6 +174,7 @@ ipcMain.handle('print-receipt', async (_, { config, content }) => {
   }
 });
 
+// Helper functions
 async function testUSBPrinter(config) {
   return new Promise((resolve, reject) => {
     try {

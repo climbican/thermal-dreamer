@@ -1,0 +1,35 @@
+
+{
+  "appId": "com.thermal-dreamer.app",
+  "productName": "Thermal Dreamer",
+  "directories": {
+    "output": "release/"
+  },
+  "files": [
+    "dist/**/*",
+    "src/electron/**/*",
+    "node_modules/**/*"
+  ],
+  "mac": {
+    "category": "public.app-category.business",
+    "target": [
+      "dmg"
+    ]
+  },
+  "win": {
+    "target": [
+      "nsis"
+    ]
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "category": "Office"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+}
