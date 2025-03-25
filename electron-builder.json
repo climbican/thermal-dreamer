@@ -7,8 +7,7 @@
   },
   "files": [
     "dist/**/*",
-    "src/electron/**/*",
-    "node_modules/**/*"
+    "build/**/*"
   ],
   "mac": {
     "category": "public.app-category.business",
