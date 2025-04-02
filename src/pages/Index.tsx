@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PrinterConnectionForm from "@/components/PrinterConnectionForm";
 import ReceiptEditor from "@/components/ReceiptEditor";
@@ -26,17 +25,6 @@ interface ReceiptContent {
   total: string;
   footer: string;
   logo?: string;
-}
-
-// Define interface for Electron API
-declare global {
-  interface Window {
-    electronAPI?: {
-      getPorts: () => Promise<any[]>;
-      testPrinter: (config: PrinterConfig) => Promise<{ success: boolean; message: string }>;
-      printReceipt: (data: { config: PrinterConfig; content: ReceiptContent }) => Promise<{ success: boolean; message: string }>;
-    };
-  }
 }
 
 const Index = () => {
